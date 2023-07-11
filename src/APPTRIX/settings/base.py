@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'rest_framework',
+    'drf_yasg',
+
     'api',
 ]
 
@@ -53,6 +56,7 @@ MIDDLEWARE = [
 
 
 ROOT_URLCONF = 'routers'
+AUTH_USER_MODEL = 'api.User'
 
 TEMPLATES = [
     {
