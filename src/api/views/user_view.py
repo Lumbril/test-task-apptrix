@@ -17,21 +17,23 @@ class CustomCreateModelMixin(mixins.CreateModelMixin):
 
 @method_decorator(name='list',
                   decorator=swagger_auto_schema(
+                      tags=['clients'],
                       operation_id='Получить список пользователей'
                   ))
 @method_decorator(name='retrieve',
                   decorator=swagger_auto_schema(
+                      tags=['clients'],
                       operation_id='Получить пользователя по id'
                   ))
-class UserView(mixins.RetrieveModelMixin,
-               mixins.ListModelMixin,
-               CustomCreateModelMixin,
-               GenericViewSet):
+class UserCreateView(mixins.RetrieveModelMixin,
+                     mixins.ListModelMixin,
+                     CustomCreateModelMixin,
+                     GenericViewSet):
     serializer_class = UserResponseSerializer
     queryset = User.objects.all()
 
     @swagger_auto_schema(
-        tags=['users'],
+        tags=['clients'],
         request_body=UserCreateSerializer,
         responses={
             status.HTTP_200_OK: UserResponseSerializer,

@@ -2,6 +2,8 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from api.packs import watermark_photo
+
 
 class CustomUserManager(BaseUserManager):
 
@@ -42,6 +44,12 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        avatar = watermark_photo(self.avatar.path)
+        avatar.save(self.avatar.path)
 
     class Meta:
         db_table = 'users'

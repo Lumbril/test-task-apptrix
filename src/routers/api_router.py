@@ -4,6 +4,6 @@ from api import views as views_api
 
 
 router = DefaultRouter(trailing_slash=False)
-router.register('users', views_api.UserView, basename='users')
+router.register('clients/create', views_api.UserCreateView, basename='users')
 
 urlpatterns = router.urls
