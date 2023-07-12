@@ -45,6 +45,9 @@ class User(AbstractUser):
 
     objects = CustomUserManager()
 
+    def get_avatar(self):
+        return str(self.avatar) if self.avatar else None
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
