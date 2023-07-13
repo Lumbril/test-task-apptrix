@@ -1,12 +1,14 @@
 from django.core.mail import EmailMessage
 from django.utils.decorators import method_decorator
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, status, parsers
+from rest_framework import mixins, status, parsers, filters
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
 from APPTRIX import settings
+from api.filters import UserFilter
 from api.models import User, Grade
 from api.packs import Error, Successful, EmailSendThread
 from api.serializers.grade_serializer import GradeSerializer
@@ -20,22 +22,17 @@ class CustomCreateModelMixin(mixins.CreateModelMixin):
         return super().create(request, *args, **kwargs)
 
 
-@method_decorator(name='list',
-                  decorator=swagger_auto_schema(
-                      tags=['clients'],
-                      operation_id='Получить список пользователей'
-                  ))
+
 @method_decorator(name='retrieve',
                   decorator=swagger_auto_schema(
                       tags=['clients'],
                       operation_id='Получить пользователя по id'
                   ))
 class UserCreateView(mixins.RetrieveModelMixin,
-                     mixins.ListModelMixin,
                      CustomCreateModelMixin,
                      GenericViewSet):
     serializer_class = UserResponseSerializer
-    queryset = User.objects.all()
+    queryset = User.objects.filter(is_staff=False)
 
     @swagger_auto_schema(
         tags=['clients'],
@@ -70,6 +67,7 @@ class UserCreateView(mixins.RetrieveModelMixin,
 class UserMatchView(GenericViewSet):
     serializer_class = GradeSerializer
     permission_classes = [IsAuthenticated]
+    queryset = Grade.objects.all()
 
     @action(detail=True, methods=['POST'], url_path='match')
     @swagger_auto_schema(
@@ -137,3 +135,15 @@ class UserMatchView(GenericViewSet):
                 EmailSendThread(email_message_second).start()
 
         return Successful()
+
+
+@method_decorator(name='list',
+                  decorator=swagger_auto_schema(
+                      tags=['list'],
+                      operation_id='Получить список пользователей'
+                  ))
+class UserListView(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = UserResponseSerializer
+    queryset = User.objects.filter(is_staff=False)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = UserFilter
