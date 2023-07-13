@@ -9,11 +9,13 @@ class UserResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserModel
-        fields = ['email', 'first_name', 'last_name', 'avatar', 'gender']
+        fields = ['email', 'first_name', 'last_name', 'avatar', 'gender',
+                  'latitude', 'longitude']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserModel
-        fields = ['email', 'password', 'first_name', 'last_name', 'avatar', 'gender']
+        fields = ['email', 'password', 'first_name', 'last_name', 'avatar', 'gender',
+                  'latitude', 'longitude']

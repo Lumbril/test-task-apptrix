@@ -12,6 +12,8 @@ class User(AbstractUser):
     last_name = models.CharField(max_length=30, blank=True, verbose_name='Фамилия')
     avatar = models.ImageField(upload_to='images/', null=True, blank=True, verbose_name='Аватар')
     gender = models.BooleanField(default=True, verbose_name='Пол (0 - ж, 1 - м)')
+    latitude = models.FloatField(default=0.0, verbose_name='Широта')
+    longitude = models.FloatField(default=0.0, verbose_name='Долгота')
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

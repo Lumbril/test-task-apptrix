@@ -1,3 +1,5 @@
+from math import cos, radians
+
 from django.core.mail import EmailMessage
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,6 +13,7 @@ from APPTRIX import settings
 from api.filters import UserFilter
 from api.models import User, Grade
 from api.packs import Error, Successful, EmailSendThread
+from api.packs.dist import dist
 from api.serializers.grade_serializer import GradeSerializer
 from api.serializers.user_serializers import UserResponseSerializer, UserCreateSerializer
 
@@ -145,5 +148,32 @@ class UserMatchView(GenericViewSet):
 class UserListView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = UserResponseSerializer
     queryset = User.objects.filter(is_staff=False)
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_class = UserFilter
+
+    def get_queryset(self):
+        queryset = self.queryset.exclude(id=self.request.user.id)
+
+        my = self.request.user
+        my_latitude = my.latitude
+        my_longitude = my.longitude
+        distance = self.request.GET.get('distance')
+
+        if distance:
+            distance = float(distance)
+
+            for item in queryset:
+                distance_between = dist(my_latitude, item.latitude, my_longitude, item.longitude)
+
+                if distance_between > distance * 1000:
+                    queryset = queryset.exclude(id=item.id)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Successful(serializer.data)
