@@ -1,10 +1,15 @@
+from django.core.mail import EmailMessage
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, parsers
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
-from api.models import User
-from api.packs import Error, Successful
+from APPTRIX import settings
+from api.models import User, Grade
+from api.packs import Error, Successful, EmailSendThread
+from api.serializers.grade_serializer import GradeSerializer
 from api.serializers.user_serializers import UserResponseSerializer, UserCreateSerializer
 
 
@@ -46,7 +51,7 @@ class UserCreateView(mixins.RetrieveModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except:
-            return Error(data={'message': serializer.errors, 'exit': False})
+            return Error(data={'message': serializer.errors})
 
         data = serializer.validated_data
 
@@ -55,6 +60,80 @@ class UserCreateView(mixins.RetrieveModelMixin,
         for attr in data:
             setattr(user, attr, data.get(attr))
 
+        user.set_password(user.password)
+
         user.save()
 
         return Successful(UserResponseSerializer(user).data)
+
+
+class UserMatchView(GenericViewSet):
+    serializer_class = GradeSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=['POST'], url_path='match')
+    @swagger_auto_schema(
+        tags=['clients'],
+        request_body=GradeSerializer,
+        responses={
+            status.HTTP_200_OK: GradeSerializer
+        },
+        operation_id='Оценить человека'
+    )
+    def match(self, request, pk):
+        me = request.user
+        whom = User.objects.filter(id=pk)
+
+        if not whom.exists():
+            return Error(data={'message': 'Этот пользователь не существует'})
+
+        whom = whom.first()
+
+        if whom.id == me.id:
+            return Error(data={'message': 'Вы не можете оценить сами себя'})
+
+        if Grade.objects.filter(who=me, whom=whom).exists():
+            return Error(data={'message': 'Вы не можете оценить одного человека дважды'})
+
+        serializer = GradeSerializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except:
+            return Error(data={'message': serializer.errors})
+
+        data = serializer.validated_data
+
+        grade = Grade()
+        grade.who = me
+        grade.whom = whom
+        grade.grade = data['grade']
+        grade.save()
+
+        # Если пользователь отметил понравился,
+        # то проверить взаимно ли это
+        if data['grade']:
+            grade_whom = Grade.objects.filter(who=whom, whom=me, grade=True)
+
+            if grade_whom.exists():
+                message_first = f'Вы понравились {whom.first_name}! Почта участника: {whom.email}'
+                message_second = f'Вы понравились {me.first_name}! Почта участника: {me.email}'
+
+                email_message_first = EmailMessage(
+                    'Взаимная симпатия',
+                    message_first,
+                    settings.EMAIL_HOST_USER,
+                    [me.email],
+                )
+
+                email_message_second = EmailMessage(
+                    'Взаимная симпатия',
+                    message_second,
+                    settings.EMAIL_HOST_USER,
+                    [whom.email],
+                )
+
+                EmailSendThread(email_message_first).start()
+                EmailSendThread(email_message_second).start()
+
+        return Successful()

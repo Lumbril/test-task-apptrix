@@ -7,6 +7,7 @@ from django.contrib import admin
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),
     path('api/', include('routers.api_router')),
 ]
 
