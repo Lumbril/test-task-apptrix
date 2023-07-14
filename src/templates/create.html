@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create user</title>
+</head>
+<body>
+    <form action="/api/clients/create" method="post" enctype="multipart/form-data">{% csrf_token %}
+        <input type="email" name="email" required placeholder="email">
+        <input type="password" name="password" required placeholder="password">
+        <input type="text" name="first_name" placeholder="First name">
+        <input type="text" name="last_name" placeholder="Last name">
+        <input type="file" name="avatar">
+        <select name="gender">
+            <option value="true">true</option>
+            <option value="false">false</option>
+        </select>
+        <input type="number" name="latitude" placeholder="latitude">
+        <input type="number" name="longitude" placeholder="longitude">
+        <input type="submit" name="" value="submit" id="">
+    </form>
+    <a href="/accounts/login">Login</a>
+</body>
+</html>

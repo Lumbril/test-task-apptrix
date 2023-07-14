@@ -170,10 +170,3 @@ class UserListView(mixins.ListModelMixin, GenericViewSet):
                     queryset = queryset.exclude(id=item.id)
 
         return queryset
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-
-        serializer = self.get_serializer(queryset, many=True)
-
-        return Successful(serializer.data)

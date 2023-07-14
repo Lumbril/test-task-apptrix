@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form onsubmit="return sendForm(event)">
+        <input type="text" name="first_name" placeholder="First name">
+        <input type="text" name="last_name" placeholder="Last name">
+        <select name="gender">
+            <option value="">none</option>
+            <option value="true">true</option>
+            <option value="false">false</option>
+        </select>
+        <input type="number" name="distance" placeholder="distance">
+        <input type="submit">
+    </form>
+    <div id="target">
+
+    </div>
+    
+    <script>
+        async function sendForm(event) {
+            console.log(event.target);
+            event.preventDefault()
+
+            await fetch(`/api/list?first_name=${event.target['first_name'].value}&last_name=${event.target['last_name'].value}${event.target['gender'].value !== '' ? '&gender=' + event.target['gender'].value : ''}&distance=${event.target['distance'].value}`, {
+                method: 'GET'
+            }).then(res => res.json()).then(data => placeData(data))
+
+            return false;
+        }
+
+        function placeData(data) {
+            const target = document.querySelector('#target')
+            
+            let arr = []
+
+            for (const datum of data) {
+                arr.push(
+                    `<div>
+                        <p>${datum.first_name} ${datum.last_name} ${datum.gender ? 'М' : 'Ж'}</p>
+                        <img src="${datum.avatar}" alt="">
+                        <div>
+                            <button onclick="sendGrade(${datum.id}, true)">Like</button>
+                            <button onclick="sendGrade(${datum.id}, false)">Dislike</button>\
+                        </div>
+                    </div>`)
+            }
+
+            target.innerHTML = arr.join('')
+        }
+
+        var csrftoken = '{{ csrf_token }}'
+
+        function sendGrade(id, grade) {
+            console.log(id, grade)
+            fetch(`/api/clients/${id}/match`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    grade: grade
+                })
+            }).then((val) => console.log(val))
+        }
+    </script>
+</body>
+</html>
